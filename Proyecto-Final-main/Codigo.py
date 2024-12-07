@@ -4,16 +4,28 @@ from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression, LogisticRegression
 from sklearn.metrics import mean_squared_error, classification_report, accuracy_score
 from sklearn.preprocessing import StandardScaler
+import os
+
+# Rutas de los archivos
+train_path = r"C:\Users\Emil Martinez\Desktop\Piton-assemble\Proyecto-Final-Emil-Martinez\Proyecto-Final-main\train.csv"
+test_path = r"C:\Users\Emil Martinez\Desktop\Piton-assemble\Proyecto-Final-Emil-Martinez\Proyecto-Final-main\test.csv"
+
+# Verificar si los archivos existen
+if not os.path.exists(train_path):
+    raise FileNotFoundError(f"El archivo {train_path} no existe. Verifica la ruta.")
+if not os.path.exists(test_path):
+    raise FileNotFoundError(f"El archivo {test_path} no existe. Verifica la ruta.")
 
 # Cargar los datos
-train_path = 'train.csv'
-test_path = 'test.csv'
-
 train = pd.read_csv(train_path)
 test = pd.read_csv(test_path)
 
-# Separar características y la variable objetivo
-X = train.drop(['TARGET(PRICE_IN_LACS)', 'ADDRESS'], axis=1)
+# Mostrar columnas para verificar que se cargaron correctamente
+print("Columnas en train.csv:", train.columns)
+print("Columnas en test.csv:", test.columns)
+
+# Separar características (X) y variable objetivo (y) en el dataset de entrenamiento
+X = train.drop(['TARGET(PRICE_IN_LACS)', 'ADDRESS'], axis=1)  # Quitar la variable objetivo y 'ADDRESS'
 y = train['TARGET(PRICE_IN_LACS)']
 
 # Convertir columnas categóricas en variables dummies
@@ -26,15 +38,14 @@ X_scaled = scaler.fit_transform(X)
 # Dividir los datos en entrenamiento y validación
 X_train, X_val, y_train, y_val = train_test_split(X_scaled, y, test_size=0.2, random_state=42)
 
-# 1. Regresión Lineal
+# Modelo 1: Regresión Lineal
 linear_model = LinearRegression()
 linear_model.fit(X_train, y_train)
 y_pred_linear = linear_model.predict(X_val)
 mse_linear = mean_squared_error(y_val, y_pred_linear)
 
-# 2. Regresión Logística (requiere transformar el objetivo en categorías)
-# Dividir los precios en categorías
-bins = [0, 50, 100, np.inf]  # Ajustar según el rango de precios
+# Modelo 2: Regresión Logística (requiere transformar el objetivo en categorías)
+bins = [0, 50, 100, np.inf]  # Divisiones para categorizar los precios
 labels = [0, 1, 2]  # Etiquetas de las categorías
 y_train_class = pd.cut(y_train, bins=bins, labels=labels)
 y_val_class = pd.cut(y_val, bins=bins, labels=labels)
@@ -47,7 +58,7 @@ y_pred_logistic = logistic_model.predict(X_val)
 accuracy_logistic = accuracy_score(y_val_class, y_pred_logistic)
 classification_rep = classification_report(y_val_class, y_pred_logistic)
 
-# Imprimir resultados
+# Resultados
 print(f'Linear Regression MSE: {mse_linear}')
 print(f'Logistic Regression Accuracy: {accuracy_logistic}')
 print('\nClassification Report for Logistic Regression:\n')
